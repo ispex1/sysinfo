@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2018.2 (64-bit)
+# SW Build 2258646 on Thu Jun 14 20:02:38 MDT 2018
+# IP Build 2256618 on Thu Jun 14 22:10:49 MDT 2018
+# Start of session at: Tue May 31 17:21:55 2022
+# Process ID: 211454
+# Current directory: /home/bordais-/Gabriel/4a/projet_systeme/project_1/project_1.runs/synth_1
+# Command line: vivado -log CPU.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source CPU.tcl
+# Log file: /home/bordais-/Gabriel/4a/projet_systeme/project_1/project_1.runs/synth_1/CPU.vds
+# Journal file: /home/bordais-/Gabriel/4a/projet_systeme/project_1/project_1.runs/synth_1/vivado.jou
+#-----------------------------------------------------------
+source CPU.tcl -notrace
