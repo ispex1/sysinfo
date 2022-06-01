@@ -28,21 +28,19 @@
 "/" 		{return tDIV;}
 ">" 		{return tST;} //Superior To
 "<" 		{return tIT;} //Inferior To
-"||" 		{return tOR;}
-"&&" 		{return tAND;}
 "==" 		{return tQE;} //Question Equal
-"!"			{return tNOT;}
 "!="		{return tNE;}
 "int" 		{return tINT;}
-"const" 	{return tCONST;}
 "//".*$		{}
 [ \t\n]+	{}
 [0-9]+		{
+				yylval.nb = atoi(yytext);
 	  			return tNB;
-			}//yylval.nb = atoi(yytext);
+			}
 [_A-Za-z][_A-Za-z0-9]*		{
+				strcpy(yylval.var,yytext);
 				return tID;
-			}//yylval.str = strdup(yytext);
+			}
 
 %%
 //int main(){

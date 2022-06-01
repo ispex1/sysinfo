@@ -1,12 +1,18 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "tab_jmp.h"
+#include "interpreteur.h"
+#include "tab_symbole.h"
+#include "tab_instructions.h"
+
 int var[26];
 void yyerror(char *s);
 %}
 
-%union {int nb; char var;}
-%token tIF tELSE tWHILE 
+%union {int nb; char var[16];}
+%token <nb> tIF tELSE tWHILE 
 %token tOP tCP tOCB tCCB  tSC tST tIT tQE tCOMMA tNE
 %token tVOID tINT tMAIN tRET tPRINT
 %right tEQUAL
@@ -19,40 +25,37 @@ void yyerror(char *s);
 
 %%
 
-Programme :  tVOID tMAIN tOP tCP tOCB Action tCCB               {printf("DEBUT PROGRAMME VOID\n");}
-            |tINT tMAIN tOP tCP tOCB Action Return tCCB         {printf("DEBUT PROGRAMME INT\n");}
+Programme :  tVOID tMAIN tOP tCP tOCB Action tCCB              
+            |tINT tMAIN tOP tCP tOCB Action Return tCCB        
             ;
 
-Return : tRET E tSC {printf("RETURN\n");} // Pas fonctionnel
+Return : tRET E tSC
         ;
 
 Declaration :  tINT tID {ti_decla_var($2);} SuiteDeclaration
              | tINT tID {ti_decla_var($2);} 
-               tEQUAL E {ti_affect_var($2);} SuiteDeclaration
+               tEQUAL E {ti_affect_equal($2);} SuiteDeclaration
              ; 
 
-SuiteDeclaration :    tCOMMA tID {ti_decla_var($2);} SuiteDeclaration   {printf("J'ai trouvé plusieurs déclaration de même type\n");}
+SuiteDeclaration :    tCOMMA tID {ti_decla_var($2);} SuiteDeclaration   
                     | tCOMMA tID {ti_decla_var($2);} 
-                      tEQUAL E {ti_affect_equal($2);} SuiteDeclaration  {printf("J'ai trouvé une affectation dans la déclaration\n");}
-                    | tSC                                               {printf("Fin de déclaration \n");}
+                      tEQUAL E {ti_affect_equal($2);} SuiteDeclaration  
+                    | tSC                                               
                     ;
 
 Affectation :     tID tEQUAL E tSC                  {ti_affect_equal($1);}
-                | tID tPLUS tEQUAL E tSC            {ti_affect_plus_equal($1);}
-                | tID tPLUS tPLUS tSC               {ti_affect_inc($1);}        
-                | tID tMINUS tMINUS tSC             {ti_affect_dec($1);}
                 ;
 
 E :       Expression 
         | tOP Expression tCP
-        | tID                                 {ti_arith_var());}
-        | tNB                                 {ti_arith_nb());}
+        | tID                                 {ti_var($1);}
+        | tNB                                 {ti_nb($1);}
         ;
 
 // EXPRESSION = CALCUL |  E ASSOCIE A VARIABLE TEMPORAIRE, TOUJOURS. 
 // LES INSTRUCTIONS SONT SUR LES 2 dernières Variable Temporaire
 Expression :  E tPLUS E               {ti_arith_add();}
-            | E tMINUS E              {ti_arith_sou();}
+            | E tMINUS E              {ti_arith_sub();}
             | E tTIMES E              {ti_arith_mul();}
             | E tDIV E                {ti_arith_div();}
             ;
@@ -61,67 +64,69 @@ Condition : E tQE E               {ti_condi_eq();}
           | E tNE E               {ti_condi_ne();}
           | E tST E               {ti_condi_sup();}
           | E tIT E               {ti_condi_inf();}
-          | E tEQUAL tST E        {ti_condi_sup_eq();}  
-          | E tEQUAL tIT E        {ti_condi_inf_eq();}    
+          | E tEQUAL tST E        {ti_condi_sup_or_eq();}  
+          | E tEQUAL tIT E        {ti_condi_inf_or_eq();}    
           ;
 
 If :    tIF tOP Condition tCP 
         {
-                int line = ti_insert(JMPF,-1,-1,-1);
-                $1 = line;
+                int condi = ts_get_last_tmp_addr();
+                ts_free_last_tmp();
+                int line = ti_insert("JMPF",condi,-1,-1);
+                tjmp_insert(line);
         }
         Body
-        {
-                int current = ti_get_nb_line();
-                patch($1, current+1);
-        }
+        Else
+        ;
 
-      | tIF tOP Condition tCP 
-        {
-                int line = ti_insert(JMPF,-1,-1,-1);
-                $1 = line;
+Else :  {
+                int current = ti_get_nb_instructions();
+                ti_patchF(tjmp_pop(), current+1);
         }
-        Body
-        {
-                int current = ti_get_nb_line();
-                patch($1, current+2);
-                int line = ti_insert(JMP,-1,-1,-1);
-                $1 = line;
-        }
+        |
         tELSE 
+        {              
+                int current = ti_get_nb_instructions();
+                ti_patchF(tjmp_pop(), current+2);
+                int line = ti_insert("JMP",-1,-1,-1);
+                tjmp_insert(line);
+        }
         Body
         {
-                int current = ti_get_nb_line();
-                patch($1, current+1);
+                int current = ti_get_nb_instructions();
+                ti_patch(tjmp_pop(), current+1);
         }
         ;
 
 While : tWHILE tOP Condition tCP 
         {
-                int line = ti_insert(JMPF,-1,-1,-1);
-                $1 = line;
+                $1 = ti_get_nb_instructions()-2;
+                int condi = ts_get_last_tmp_addr();
+                ts_free_last_tmp();
+                int line = ti_insert("JMPF",condi,-1,-1);
+                tjmp_insert(line);
         }
         Body
         {
-                int current = ti_get_nb_line();
-                patch($1, current+2);
-                ti_insert(JMP,$1,-1,-1);
+                int current = ti_get_nb_instructions();
+                ti_patchF(tjmp_pop(), current+2);
+                ti_insert("JMP",$1,-1,-1);
         }
         ;
 
-Printf : tPRINT tOP tID tCP tSC                         {ti_printf($1)} 
+Printf : tPRINT tOP tID tCP tSC {ti_printf($3);} 
         ;
 
 Body :    tOCB Action tCCB                             
         | tOCB Action tCCB tSC                          
         ;
 
-Action :  Declaration Action                            {printf("Declaration + Action\n");}
-        | Affectation Action                            {printf("Affectation + Action\n");}
-        | If Action                                     {printf("If + Action\n");}
-        | While Action                                  {printf("While + Action\n");}
-        | Printf Action                                 {printf("Print + Action\n");} 
-        |                                               {printf("Finito l'actionido\n");} 
+Action :  Declaration Action                            
+        | Affectation Action                            
+        | If Action                                     
+        | While Action                                  
+        | Printf Action                                 
+        |                                               
         ;     
 
 %%
@@ -131,6 +136,17 @@ void yyerror(char *s){
 }
 
 int main(){
-    yyparse();
+        ti_init();
+        ts_init();
+        tjmp_init();
+        yyparse();
+
+        ti_print();
+        ts_print();
+        ti_create_file();
+        printf("interpreteur\n");
+        interpreteur();
+        printf("\n");
+
     return 0;
 }

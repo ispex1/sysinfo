@@ -1,0 +1,17 @@
+void main(){
+    ts_insert("caca");
+    ts_insert_tmp();
+    ts_insert("coco");
+    ts_insert("pipi");
+    ts_print();
+
+    printf("\n");
+    printf("\n");
+    
+    ts_free_last_tmp();
+    ts_print();
+
+    printf("\n");
+    
+    printf("@pipi : %d\n", ts_get_adresse("pipi"));
+}
