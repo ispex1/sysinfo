@@ -56,7 +56,7 @@ void ts_free_last_tmp(){
 void ts_print(){
     printf("NAME | ADDRESS\n");
     for (int i = 0; i < TS.nb_symboles+1; i++){
-        printf("%s : %d\n", TS.tab_symbole[i].name, TS.tab_symbole[i].adresse);
+        printf("%s : \t%d\n", TS.tab_symbole[i].name, TS.tab_symbole[i].adresse);
     }
     printf("\n");
 }

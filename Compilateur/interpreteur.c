@@ -50,10 +50,6 @@ void interpreteur(){
         else if (strcmp(inst, "PRI") == 0){
             printf("%d\n", tab_int[TI.tab_instructions[instruction].addr_dest]);
         }
-
-        else printf("instruction inconnue\n");
-        
-        
         instruction++;
     }
 }

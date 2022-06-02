@@ -51,18 +51,19 @@ void ti_print(){
     for(i=0; i<TI.nb_instructions+1; i++){
         printf("%d\t  %s\t\t  %d\t\t%d\t  %d\n", i, TI.tab_instructions[i].inst, TI.tab_instructions[i].addr_dest, TI.tab_instructions[i].addr1, TI.tab_instructions[i].addr2);
     }
+    printf("\n");
 }
 
 //create a file with all the instructions into it
 void ti_create_file(){
     FILE *file;
-    file = fopen("instructions_asm.txt", "w");
+    file = fopen("instructions.asm", "w");
     int i;
     for (i = 0; i < TI.nb_instructions+1; i++){
-        fprintf(file, "%s", TI.tab_instructions[i].inst);
-        if(TI.tab_instructions[i].addr_dest != -1) fprintf(file, "%d\n",TI.tab_instructions[i].addr_dest); // on ne print que ce qui est définit
-        if(TI.tab_instructions[i].addr1 != -1) fprintf(file, "%d\n",TI.tab_instructions[i].addr1);
-        if(TI.tab_instructions[i].addr2 != -1) fprintf(file, "%d\n",TI.tab_instructions[i].addr2);
+        fprintf(file, "%s   ", TI.tab_instructions[i].inst);
+        if(TI.tab_instructions[i].addr_dest != -1) fprintf(file, "%d\t",TI.tab_instructions[i].addr_dest); // on ne print que ce qui est définit
+        if(TI.tab_instructions[i].addr1 != -1) fprintf(file, "%d\t",TI.tab_instructions[i].addr1);
+        if(TI.tab_instructions[i].addr2 != -1) fprintf(file, "%d\t",TI.tab_instructions[i].addr2);
         fprintf(file,"\n");
     }
     fclose(file);

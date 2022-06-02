@@ -144,9 +144,9 @@ int main(){
         ti_print();
         ts_print();
         ti_create_file();
-        printf("interpreteur\n");
+        /*printf("Interpreteur : \n");
         interpreteur();
-        printf("\n");
+        printf("\n");*/
 
     return 0;
 }
